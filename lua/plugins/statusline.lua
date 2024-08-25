@@ -20,6 +20,7 @@ local function listen_layout_change(l)
 	work:queue()
 end
 
+-- Too resource-intensive...
 local function layout_worker()
 	vim.api.nvim_create_autocmd({"QuitPre"}, {
 		callback = function() LAYOUT_WORKER_STOP = true end
@@ -36,7 +37,6 @@ return {
     dependencies = { 'nvim-tree/nvim-web-devicons' },
 	config = function ()
 		local plugin = require('lualine')
-		layout_worker()
 		plugin.setup {}
 	end,
 }
