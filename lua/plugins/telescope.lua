@@ -30,8 +30,8 @@ return {
 		require('telescope').load_extension('ui-select')
 
 		local builtin = require('telescope.builtin')
-		vim.keymap.set('n', '<leader>p', builtin.find_files, {})
-		vim.keymap.set('n', '<leader>f', builtin.live_grep, {})
-		vim.keymap.set('n', '<leader>vh', builtin.help_tags, {})
+		vim.keymap.set('n', '<D-p>', builtin.find_files, {})
+		vim.keymap.set('n', '<D-F>', builtin.live_grep, {})
+		vim.keymap.set('n', '<D-f>', builtin.current_buffer_fuzzy_find, {})
 	end
 }

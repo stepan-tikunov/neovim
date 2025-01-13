@@ -14,6 +14,8 @@ return {
     },
 
     config = function()
+		vim.lsp.set_log_level("debug")
+
         local cmp = require('cmp')
         local cmp_lsp = require("cmp_nvim_lsp")
         local capabilities = vim.tbl_deep_extend(
@@ -21,6 +23,27 @@ return {
             {},
             vim.lsp.protocol.make_client_capabilities(),
             cmp_lsp.default_capabilities())
+
+		local on_attach = function(_, bufnr)
+			local function buf_set_option(...)
+				vim.api.nvim_buf_set_option(bufnr, ...)
+			end
+
+			buf_set_option('omnifunc', 'v:lua.vim.lsp.omnifunc')
+
+		end
+
+		vim.keymap.set("n", "<D-d>", function() vim.lsp.buf.definition() end, {})
+		vim.keymap.set("n", "<D-i>", function() vim.lsp.buf.implementation() end, {})
+		vim.keymap.set("n", "K", function() vim.lsp.buf.hover() end, {})
+		vim.keymap.set("n", "<leader>r", function() vim.lsp.buf.references() end, {})
+		vim.keymap.set("n", "<D-r>", function() vim.lsp.buf.rename() end, {})
+		vim.keymap.set("n", "<D-.>", function() vim.lsp.buf.code_action() end, {})
+		vim.keymap.set("n", "[d", function() vim.diagnostic.goto_prev() end, {})
+		vim.keymap.set("n", "]d", function() vim.diagnostic.goto_next() end, {})
+		vim.keymap.set("n", "<C-w>d", function() vim.diagnostic.open_float() end, {})
+		vim.keymap.set("i", "<C-h>", function() vim.lsp.buf.signature_help() end, {})
+		vim.keymap.set("n", "gf", function() vim.lsp.buf.format({ async = true }) end, {})
 
         require("fidget").setup({})
         require("mason").setup()
@@ -31,22 +54,16 @@ return {
                 "gopls",
 				"intelephense",
 				"eslint",
+				"pbls",
+				"pylsp",
+				"golangci_lint_ls",
             },
             handlers = {
                 function(server_name)
                     require("lspconfig")[server_name].setup {
-                        capabilities = capabilities
+                        capabilities = capabilities,
+						on_attach = on_attach
                     }
-
-					vim.keymap.set("n", "gd", function() vim.lsp.buf.definition() end, {})
-					vim.keymap.set("n", "K", function() vim.lsp.buf.hover() end, {})
-					vim.keymap.set("n", "<leader>rf", function() vim.lsp.buf.references() end, {})
-					vim.keymap.set("n", "<leader>rn", function() vim.lsp.buf.rename() end, {})
-					vim.keymap.set("n", "<leader>.", function() vim.lsp.buf.code_action() end, {})
-					vim.keymap.set("n", "[d", function() vim.diagnostic.goto_prev() end, {})
-					vim.keymap.set("n", "]d", function() vim.diagnostic.goto_next() end, {})
-					vim.keymap.set("n", "<C-w>d", function() vim.diagnostic.open_float() end, {})
-					vim.keymap.set("i", "<C-h>", function() vim.lsp.buf.signature_help() end, {})
                 end,
                 ["lua_ls"] = function()
                     local lspconfig = require("lspconfig")
@@ -59,9 +76,23 @@ return {
                                     globals = { "bit", "vim", "it", "describe", "before_each", "after_each" },
                                 }
                             }
-                        }
+                        },
+						on_attach = on_attach
                     }
                 end,
+				["gopls"] = function()
+					local lspconfig = require("lspconfig")
+					lspconfig.gopls.setup {
+						on_attach = function(client, bufnr)
+							vim.api.nvim_create_autocmd({"BufWritePre"}, {
+								buffer = bufnr,
+								callback = function()
+									vim.lsp.buf.format({bufnr = bufnr, id = client.id})
+								end,
+							})
+						end
+					}
+				end
             }
         })
 
